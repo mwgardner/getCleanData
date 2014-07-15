@@ -4,6 +4,10 @@ uciCleanData <- function() {
     library(plyr)
     
     # reads in variable descriptions and activity descriptions
+    # working directory should include the UCI HAR Dataset folder
+    if(!file.exists("UCI HAR Dataset")) {
+        stop("UCI Human Activity Recognition (HAR) data folder ('UCI HAR Dataset') not found.")
+    }
     setwd("./UCI HAR Dataset")
     featureVariables <- read.table("features.txt")
     featureVariables <- as.character(featureVariables[,2])
@@ -11,18 +15,19 @@ uciCleanData <- function() {
     activities <- as.character(activities[,2])
     
     # reads in training data sets (X, Y, and subject)
-    setwd("./UCI HAR Dataset/train")
+    setwd("./train")
     X_data <- read.table("X_train.txt")
     Y_data <- read.table("y_train.txt")
     subjects <- read.table("subject_train.txt")
     
     # merges training and test datasets together (separate X, Y, and subject)
-    setwd("./UCI HAR Dataset/test")
+    setwd("../test")
     X_data <- rbind(X_data,read.table("X_test.txt"))
     Y_data <- rbind(Y_data,read.table("y_test.txt"))
     Y_data <- Y_data[,1]
     subjects <- rbind(subjects,read.table("subject_test.txt"))
     subjects <- subjects[,1]
+    setwd("../../")
     
     # appropriately labels the dataset with descriptive variable names
     names(X_data) <- featureVariables
@@ -39,7 +44,7 @@ uciCleanData <- function() {
     
     # create complete dataset of X data, associated activity (Y data), and associated subject
     XY.meanStd.data <- cbind("subject" = subjects, "activity" = f.Y_data, X.mean.std_data)
-    write.csv(XY.meanStd.data,"../UCI_HAR_mean_stdev.csv", row.names=FALSE)
+    write.csv(XY.meanStd.data,"./UCI_HAR_mean_stdev.csv", row.names=FALSE)
     XY.data <- cbind("subject" = subjects, "activity" = f.Y_data, X_data)
     
     # splits XY.meanStd.data on activity and subject, and then calculates
@@ -55,16 +60,16 @@ uciCleanData <- function() {
     activityF <- activity.subject[,1]
     subjectF <- as.numeric(activity.subject[,2])
     tidyData <- cbind("subject" = subjectF, "activity" = activityF, Mean.sMeanStd)
-    write.csv(tidyData, "../tidyData.csv", row.names=FALSE)
+    write.csv(tidyData, "./tidyData.csv", row.names=FALSE)
     
     # splits XY.data on activity and subject, and then calculates
     # the mean of all variables (561)
     sAll <- split(XY.data, list(XY.data$activity, XY.data$subject))
-    sAllidx <- names(XY.data)[1:561]
+    sAllidx <- names(XY.data)[3:563]
     Mean.sAll <- data.frame(t(sapply(sAll, function(x) colMeans(x[,sAllidx]))))
     tidyData2 <- cbind("subject" = subjectF, "activity" = activityF, Mean.sAll)
     # outputs a tab-delimited text file and returns the second tidy data set
-    write.table(tidyData2, "../tidyData2.txt", sep="\t", row.names=FALSE)
+    write.table(tidyData2, "./tidyData2.txt", sep="\t", row.names=FALSE)
     return(tidyData2)
 }
     
