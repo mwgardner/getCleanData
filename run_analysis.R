@@ -1,8 +1,6 @@
-uciCleanData <- function() {
+uciHarCleanData <- function() {
     library(data.table)
-    library(tools)
-    library(plyr)
-    
+        
     # reads in variable descriptions and activity descriptions
     # working directory should include the UCI HAR Dataset folder
     if(!file.exists("UCI HAR Dataset")) {
