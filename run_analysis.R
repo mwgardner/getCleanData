@@ -58,17 +58,28 @@ uciHarCleanData <- function() {
     activityF <- activity.subject[,1]
     subjectF <- as.numeric(activity.subject[,2])
     tidyData <- cbind("subject" = subjectF, "activity" = activityF, Mean.sMeanStd)
-    write.csv(tidyData, "./tidyData.csv", row.names=FALSE)
+    vars <- gsub("\\.","",sub("std","StdDev",sub("mean","Mean",
+                sub("Mag","Magnitude",sub("Gyro","Gyroscope",
+                sub("Acc","Acceleration",sub("^f","Fft",
+                sub("^t","time",names(tidyData)))))))))
+    names(tidyData) <- vars
+    write.table(tidyData, "./tidyData.txt", sep="\t", row.names=FALSE)
     
     # splits XY.data on activity and subject, and then calculates
     # the mean of all variables (561)
-    sAll <- split(XY.data, list(XY.data$activity, XY.data$subject))
-    sAllidx <- names(XY.data)[3:563]
-    Mean.sAll <- data.frame(t(sapply(sAll, function(x) colMeans(x[,sAllidx]))))
-    tidyData2 <- cbind("subject" = subjectF, "activity" = activityF, Mean.sAll)
+    
+    ##### not performed ######
+    
+    # sAll <- split(XY.data, list(XY.data$activity, XY.data$subject))
+    # sAllidx <- names(XY.data)[3:563]
+    # Mean.sAll <- data.frame(t(sapply(sAll, function(x) colMeans(x[,sAllidx]))))
+    # tidyData2 <- cbind("subject" = subjectF, "activity" = activityF, Mean.sAll)
+    
+    #####
+    
     # outputs a tab-delimited text file and returns the second tidy data set
-    write.table(tidyData2, "./tidyData2.txt", sep="\t", row.names=FALSE)
-    return(tidyData2)
+    # write.table(tidyData2, "./tidyData2.txt", sep="\t", row.names=FALSE)
+    return(tidyData)
 }
     
     
