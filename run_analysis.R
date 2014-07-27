@@ -27,12 +27,14 @@ uciHarCleanData <- function() {
     subjects <- subjects[,1]
     setwd("../../")
     
-    # appropriately labels the dataset with descriptive variable names
+    # appropriately labels the dataset with descriptive variable names,
+    # but odd characters are still included
     names(X_data) <- featureVariables
-    # finds the indices with variable names that contain "mean" or "std"
-    meanStdIdx <- c(grep("mean", featureVariables, ignore.case=TRUE), 
-                    grep("std", featureVariables, ignore.case=TRUE))
+    # finds the indices with mean and std. dev. variable measurements
+    meanStdIdx <- c(grep("mean\\(\\)", featureVariables, ignore.case=TRUE,value=TRUE), 
+                    grep("std\\(\\)", featureVariables, ignore.case=TRUE,value=TRUE))
     meanStdIdx <- sort(meanStdIdx)
+    
     # subsets X data for only the mean and standard deviation variables
     X.mean.std_data <- X_data[,meanStdIdx]
     
@@ -42,14 +44,28 @@ uciHarCleanData <- function() {
     
     # create complete dataset of X data, associated activity (Y data), and associated subject
     XY.meanStd.data <- cbind("subject" = subjects, "activity" = f.Y_data, X.mean.std_data)
-    write.csv(XY.meanStd.data,"./UCI_HAR_mean_stdev.csv", row.names=FALSE)
-    XY.data <- cbind("subject" = subjects, "activity" = f.Y_data, X_data)
     
+    # cleanup variable names and make more descriptive
+    vars <- gsub("\\(\\)","",
+                gsub("-","",
+                sub("std","StdDev",
+                sub("mean","Mean",
+                sub("BodyBody","Body",
+                sub("Mag","Magnitude",
+                sub("Gyro","Gyroscope",
+                sub("Acc","Acceleration",
+                sub("^f","fft",
+                sub("^t","time",names(XY.meanStd.data)))))))))))
+    names(XY.meanStd.data) <- vars
+    
+    # write all measurements on mean and std. dev. variables to a *.csv file
+    write.csv(XY.meanStd.data,"./UCI_HAR_mean_stdev.csv", row.names=FALSE)
+        
     # splits XY.meanStd.data on activity and subject, and then calculates
-    # the mean of only the mean and std variables (86)
+    # the mean of only the mean and std variables (66)
     sMeanStd <- split(XY.meanStd.data, list(XY.meanStd.data$activity, XY.meanStd.data$subject))
-    sMeanStdidx <- sort(c(grep("mean", names(XY.meanStd.data), ignore.case=TRUE), 
-                           grep("std", names(XY.meanStd.data), ignore.case=TRUE)))
+    
+    sMeanStdidx <- seq(3,length(names(XY.meanStd.data)),by=1)
     Mean.sMeanStd <- data.frame(t(sapply(sMeanStd, function(x) colMeans(x[,sMeanStdidx]))))
     
     # applies descriptive names of rows and columns
@@ -58,27 +74,9 @@ uciHarCleanData <- function() {
     activityF <- activity.subject[,1]
     subjectF <- as.numeric(activity.subject[,2])
     tidyData <- cbind("subject" = subjectF, "activity" = activityF, Mean.sMeanStd)
-    vars <- gsub("\\.","",sub("std","StdDev",sub("mean","Mean",
-                sub("Mag","Magnitude",sub("Gyro","Gyroscope",
-                sub("Acc","Acceleration",sub("^f","Fft",
-                sub("^t","time",names(tidyData)))))))))
-    names(tidyData) <- vars
+    
+    # writes tidyData as a tab-delimited text file and returns tidyData
     write.table(tidyData, "./tidyData.txt", sep="\t", row.names=FALSE)
-    
-    # splits XY.data on activity and subject, and then calculates
-    # the mean of all variables (561)
-    
-    ##### not performed ######
-    
-    # sAll <- split(XY.data, list(XY.data$activity, XY.data$subject))
-    # sAllidx <- names(XY.data)[3:563]
-    # Mean.sAll <- data.frame(t(sapply(sAll, function(x) colMeans(x[,sAllidx]))))
-    # tidyData2 <- cbind("subject" = subjectF, "activity" = activityF, Mean.sAll)
-    
-    #####
-    
-    # outputs a tab-delimited text file and returns the second tidy data set
-    # write.table(tidyData2, "./tidyData2.txt", sep="\t", row.names=FALSE)
     return(tidyData)
 }
     
